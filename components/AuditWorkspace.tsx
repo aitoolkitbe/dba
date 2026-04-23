@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { Brand, DBAAsset, AssetAnalysis } from "@/lib/types";
 import { CATEGORY_META, quadrantOf, QUADRANT_META } from "@/lib/types";
 import { DBAGrid, quadrantColor } from "./DBAGrid";
+import { saveBrand } from "@/lib/storage";
 import {
   Loader2,
   RefreshCw,
@@ -12,6 +14,8 @@ import {
   TriangleAlert,
   TrendingUp,
   Archive,
+  Hammer,
+  Save,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,14 +24,16 @@ type ScoreMap = Record<string, { fame: number; uniqueness: number }>;
 export function AuditWorkspace({ brand }: { brand: Brand }) {
   const [scores, setScores] = useState<ScoreMap>(() =>
     Object.fromEntries(
-      brand.assets
-        .filter((a) => a.scores)
-        .map((a) => [
-          a.id,
-          { fame: a.scores!.fame, uniqueness: a.scores!.uniqueness },
-        ])
+      brand.assets.map((a) => [
+        a.id,
+        {
+          fame: a.scores?.fame ?? 50,
+          uniqueness: a.scores?.uniqueness ?? 50,
+        },
+      ])
     )
   );
+  const [savedAt, setSavedAt] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<string | undefined>(
     brand.assets[0]?.id
   );
@@ -40,21 +46,45 @@ export function AuditWorkspace({ brand }: { brand: Brand }) {
     () =>
       brand.assets.map((a) => {
         const s = scores[a.id];
+        const mergedScores = s
+          ? {
+              ...a.scores,
+              fame: s.fame,
+              uniqueness: s.uniqueness,
+              source: a.scores?.source ?? "estimate",
+            }
+          : a.scores;
         return {
           ...a,
-          scores: s
-            ? {
-                ...a.scores,
-                fame: s.fame,
-                uniqueness: s.uniqueness,
-                source: a.scores?.source ?? "estimate",
-              }
-            : a.scores,
+          scores: mergedScores as DBAAsset["scores"],
           analysis: analyses[a.id] ?? a.analysis,
         };
       }),
     [brand.assets, scores, analyses]
   );
+
+  const isUserBrand = !brand.isDemo;
+
+  function persistScores() {
+    const next: Brand = {
+      ...brand,
+      assets: brand.assets.map((a) => {
+        const s = scores[a.id];
+        if (!s) return a;
+        return {
+          ...a,
+          scores: {
+            ...(a.scores ?? {}),
+            fame: s.fame,
+            uniqueness: s.uniqueness,
+            source: a.scores?.source ?? "estimate",
+          },
+        };
+      }),
+    };
+    saveBrand(next);
+    setSavedAt(Date.now());
+  }
 
   const selected = mergedAssets.find((a) => a.id === selectedId);
 
@@ -136,23 +166,34 @@ export function AuditWorkspace({ brand }: { brand: Brand }) {
             )}
           </p>
         </div>
-        <button
-          onClick={analyzeAll}
-          disabled={bulkLoading}
-          className="btn-primary"
-        >
-          {bulkLoading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Analysing…
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4" />
-              Analyse all assets with Claude
-            </>
+        <div className="flex flex-wrap items-center gap-2">
+          {isUserBrand && (
+            <button onClick={persistScores} className="btn-secondary">
+              <Save className="h-4 w-4" />
+              {savedAt ? "Saved" : "Save scores"}
+            </button>
           )}
-        </button>
+          <Link href={`/create/${brand.id}`} className="btn-secondary">
+            <Hammer className="h-4 w-4" /> Create module
+          </Link>
+          <button
+            onClick={analyzeAll}
+            disabled={bulkLoading}
+            className="btn-primary"
+          >
+            {bulkLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Analysing…
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                Analyse all with Claude
+              </>
+            )}
+          </button>
+        </div>
       </header>
 
       {error && (

@@ -101,8 +101,103 @@ export interface Brand {
   /** Main competitors (used to check uniqueness) */
   competitors?: string[];
   assets: DBAAsset[];
+  /** Candidate assets (not yet shipped) produced by the Create module */
+  candidates?: AssetCandidate[];
+  /** Cached category-code scan */
+  categoryScan?: CategoryScan;
   /** Demo flag — protected Coca-Cola example */
   isDemo?: boolean;
+  /** Lifecycle timestamps (stored brands only) */
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/* ------------------------------------------------------------------ */
+/* CREATE module types                                                */
+/* ------------------------------------------------------------------ */
+
+export type CandidateStatus = "draft" | "tested" | "briefed" | "archived";
+
+export interface CandidateConcept {
+  name: string;
+  type: AssetType;
+  category: AssetCategory;
+  description: string;
+  /** Visual/emoji stand-in */
+  visual?: string;
+  /** Why this is distinctive, in one sentence */
+  distinctiveness_hypothesis: string;
+  /** 2–4 concrete execution notes */
+  execution_notes: string[];
+  /** Honest risks / failure modes */
+  risks: string[];
+}
+
+export interface StressTestResult {
+  overallRisk: "low" | "medium" | "high";
+  headline: string;
+  /** Conflicts with specific competitors */
+  conflicts: Array<{
+    competitor: string;
+    severity: "low" | "medium" | "high";
+    reason: string;
+  }>;
+  /** Clashes with category conventions */
+  categoryCodeClashes: string[];
+  /** Legal / trademark / dilution flags */
+  legalFlags?: string[];
+  recommendations: string[];
+}
+
+export interface CreativeBrief {
+  /** Markdown version, ready to copy-paste into any deck */
+  markdown: string;
+  /** Structured pieces for in-app rendering */
+  mandatories: string[];
+  guardrails: string[];
+  executionExamples: string[];
+  usageContexts: string[];
+  /** The one-sentence distinctiveness promise for creatives */
+  promise: string;
+}
+
+export interface AssetCandidate {
+  id: string;
+  brandId: string;
+  createdAt: string;
+  updatedAt: string;
+  /** Which gap this candidate addresses (free text) */
+  gapBrief?: string;
+  /** Desired asset category when ideating */
+  requestedCategory?: AssetCategory;
+  /** Desired asset type when ideating */
+  requestedType?: AssetType;
+  concept: CandidateConcept;
+  stressTest?: StressTestResult;
+  brief?: CreativeBrief;
+  status: CandidateStatus;
+}
+
+export interface CategoryCode {
+  cue: string;
+  /** Which category elements use this cue */
+  usedBy: string[];
+  /** Why this has become a convention */
+  explanation: string;
+  /** Whether to avoid, acknowledge, or exploit (inversion) */
+  recommendation: "avoid" | "acknowledge" | "invert";
+}
+
+export interface CategoryScan {
+  scannedAt: string;
+  category: string;
+  competitors: string[];
+  /** Codes grouped by asset category */
+  codes: Record<AssetCategory, CategoryCode[]>;
+  /** Summary insight */
+  summary: string;
+  /** Open zones — underused codes for this category */
+  openZones: string[];
 }
 
 /* ------------------------------------------------------------------ */

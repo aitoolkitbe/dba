@@ -1,21 +1,13 @@
-import { notFound } from "next/navigation";
-import { getBrandById } from "@/lib/demo-brands";
-import { AuditWorkspace } from "@/components/AuditWorkspace";
+import { AuditResultsClient } from "@/components/AuditResultsClient";
 
 export default function AuditResultsPage({
   params,
 }: {
   params: { brandId: string };
 }) {
-  const brand = getBrandById(params.brandId);
-  if (!brand) notFound();
   return (
     <div className="pt-6">
-      <AuditWorkspace brand={brand} />
+      <AuditResultsClient brandId={params.brandId} />
     </div>
   );
-}
-
-export function generateStaticParams() {
-  return [{ brandId: "coca-cola-demo" }];
 }

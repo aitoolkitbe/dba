@@ -78,8 +78,8 @@ export default function Home() {
             href="/create"
             icon={<Hammer className="h-5 w-5" />}
             title="Create"
-            status="Preview"
-            description="Generate new asset candidates that are distinctive from day one — not differentiated, distinct. Test against category codes and competitor sets."
+            status="Live"
+            description="Generate new asset candidates that are distinctive from day one — not differentiated, distinct. Test against category codes and competitor sets, then export a ready-to-send creative brief."
             bullets={[
               "Asset-type idea engine",
               "Category-code diagnostic",

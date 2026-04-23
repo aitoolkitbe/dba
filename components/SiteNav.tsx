@@ -17,7 +17,6 @@ export function SiteNav() {
             href="/create"
             icon={<Hammer className="h-4 w-4" />}
             label="Create"
-            soon
           />
           <NavItem
             href="/deploy"
